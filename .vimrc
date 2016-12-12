@@ -1,80 +1,58 @@
-set nocompatible              " required
-filetype off                  " required
+set nocompatible " 非 vi 兼容模式
+syntax enable " 色彩高亮
+set background=dark
+colorscheme solarized
 
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-
-" alternatively, pass a path where Vundle should install plugins
-"call vundle#begin('~/some/path/here')
-
-" let Vundle manage Vundle, required
-Plugin 'gmarik/Vundle.vim'
-Plugin 'tmhedberg/SimpylFold'
-Plugin 'vim-scripts/indentpython.vim'
-Plugin 'Valloric/YouCompleteMe'
-Plugin 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
-
-" Add all your plugins here (note older versions of Vundle used Bundle instead of Plugin)
-
-""""""""" My settings
-set encoding=utf-8
-syntax enable
-
-""""" Spaces and Tabs
-set expandtab
-set autoindent
-set textwidth=79
-set fileformat=unix
-au BufNewFile,BufRead *.py, *.R
-            \     set tabstop=4
-            \     set softtabstop=4
-            \     set shiftwidth=4
-
-au BufNewFile,BufRead *.js, *.html, *.css
-    \ set tabstop=2
-    \ set softtabstop=2
-    \ set shiftwidth=2
-
-
-
-""""" UI
-" show line number
-set number 
-" show command in bottom bar
-set showcmd
-" load filetype-specific indent files
-filetype indent on
-" visual autocomplete for command menu
-set wildmenu 
-" redraw only when we need to.
-set lazyredraw
-" highlight matching [{()}]
-set showmatch
-
-
-""""" Searching
-" search as characters are entered
-set incsearch
-" highlight matches
+set number " 显示行数
+set ruler " 显示当前位置于右下角
+set backspace=2 " 设置 backspace 模式为标准
+set showmatch " 显示配对括号
+set incsearch " 增量查找
 set hlsearch
-" turn off search highlight
-nnoremap <leader><space> :nohlsearch<CR>
+set si " 智能缩进
+set tabstop=4 " Tab 宽度
+set softtabstop=4 " Tab 宽度
+set shiftwidth=4 " Tab 宽度
+set expandtab " 输入的 tab(\t) 均不保持为 tab 而转换为空格
+set fileencodings=ucs-bom,utf-8,cp936,gb18030,big5,euc-jp,sjis,euc-kr,ucs-2le,latin1 "字符编码
+set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [POS=%04l,%04v][%p%%]\ [LEN=%L] " 状态栏格式
+set laststatus=2 " 一直显示状态栏
+set encoding=utf8
 
+if has("autocmd")
+    au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+endif
 
-"split navigations
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
-nnoremap <C-L> <C-W><C-L>
-nnoremap <C-H> <C-W><C-H>
+"auto Header
+function HeaderCreate()
+    if expand("%:e") == "py" 
+        call setline(1, "#! /usr/bin/env python")
+    elseif expand("%:e") == "sh"
+        call setline(1, "#! /bin/bash")
+    endif
+    call append(1, "# -*- coding: utf-8 -*-")
+    call append(2, "")
+    call append(3, "# *************************************************************")
+    call append(4, "#       Filename @  " . expand("%:t"))
+    call append(5, "#         Author @  Fengchi")
+    call append(6, "#    Create date @  " . strftime('%Y-%m-%d %T', localtime()))
+    call append(7, "#  Last Modified @  " . strftime('%Y-%m-%d %T', localtime()))
+    call append(8, "#    Description @  ") 
+    call append(9, "# *************************************************************")
+    normal G
+    normal o
+    normal o
+endfunc 
 
-" Flagging Unnecessary Whitespace 
-au BufRead,BufNewFile *.py,*.pyw,*.c,*.h match BadWhitespace /\s\+$/
+function ChangeModified()
+    call cursor(8, 1)
+    if search("Last Modified") != 0
+        let line = line('.')
+        call setline(line, '#  Last Modified @  ' . strftime('%Y-%m-%d %T', localtime()))
+    endif
+endfunc
 
-let g:ycm_autoclose_preview_window_after_completion=1
-map <leader>g  :YcmCompleter GoToDefinitionElseDeclaration<CR>
+map <F4> :call HeaderCreate()<CR>:10<CR>o
 
-" All of your Plugins must be added before the following line
-call vundle#end()            " required
-filetype plugin indent on    " required
-
+autocmd bufnewfile *.py,*.sh call HeaderCreate()
+autocmd FileWritePre,BufWritePre *.py,*sh ks|call ChangeModified() |'s
