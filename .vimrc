@@ -52,7 +52,7 @@ function ChangeModified()
     endif
 endfunc
 
-map <F4> :call HeaderCreate()<CR>:10<CR>o
+map <F4> gg<CR>O<CR><ESC>:call HeaderCreate()<CR>:10<CR>
 
 autocmd bufnewfile *.py,*.sh call HeaderCreate()
 autocmd FileWritePre,BufWritePre *.py,*sh ks|call ChangeModified() |'s
